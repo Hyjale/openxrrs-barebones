@@ -1,33 +1,23 @@
 [package]
 name = "xrrs"
+description = "Middle School Project"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-ash = "0.35"
-bytemuck = { version = "1.7.3", features = [ "derive" ] }
-cgmath = "0.18"
-env_logger = "0.9"
+ash = "0.37"
 openxr = { git = "https://github.com/Ralith/openxrs", features = ["loaded"]}
-tokio = {version = "1.15.0", features = ["full"]}
-wgpu = "0.12"
-winit = "0.26"
 
 [target.'cfg(target_os = "android")'.dependencies]
 ndk-context = "0.1"
 ndk-glue = "0.6.1"
 
 [[example]]
-name = "cube"
-path = "examples/cube.rs"
-
-[[example]]
-name = "openxr"
-path = "examples/openxr.rs"
+name = "demo"
+path = "examples/demo.rs"
 crate-type = ["cdylib"]
 
+# Below is metadata used by cargo-apk
 [package.metadata.android]
 runtime_libs = "examples/libs"
 
@@ -35,6 +25,12 @@ runtime_libs = "examples/libs"
 min_sdk_version = 21
 target_sdk_version = 30
 
+[package.metadata.android.application.activity]
+config_changes = "screenSize|screenLayout|orientation|keyboardHidden|keyboard|navigation|uiMode"
+launch_mode = "singleTask"
+orientation = "landscape"
+
 [[package.metadata.android.application.activity.intent_filter]]
 actions = ["android.intent.action.MAIN"]
 categories = ["com.oculus.intent.category.VR", "android.intent.category.LAUNCHER"]
+
