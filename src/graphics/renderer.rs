@@ -1,11 +1,13 @@
 use std::sync::{Arc};
 
 use crate::graphics::{
+    device::Device,
     instance::Instance,
     physical_device::PhysicalDevice
 };
 
 pub struct Renderer {
+    device: Arc<Device>,
     instance: Arc<Instance>,
     physical_device: Arc<PhysicalDevice>,
 }
@@ -19,9 +21,12 @@ impl Renderer {
                                                   system_id
         );
 
+        let device = Device::new(&xr_instance, &instance.instance, physical_device.physical_device, system_id);
+
         Renderer {
+            device: device,
             instance: instance,
-            physical_device: physical_device
+            physical_device: physical_device,
         }
     }
 }

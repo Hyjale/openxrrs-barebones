@@ -12,10 +12,23 @@ impl Device {
     pub fn new(xr_instance: &openxr::Instance,
                vk_instance: &ash::Instance,
                physical_device: ash::vk::PhysicalDevice,
-               system: openxr::SystemId,
+               system_id: openxr::SystemId,
     ) -> Arc<Device> {
         unsafe {
             let entry = ash::Entry::load().unwrap();
+
+            let queue_family_index = vk_instance
+                .get_physical_device_queue_family_properties(physical_device)
+                .into_iter()
+                .enumerate()
+                .find_map(|(queue_family_index, info)| {
+                    if info.queue_flags.contains(vk::QueueFlags::GRAPHICS) {
+                        Some(queue_family_index as u32)
+                    } else {
+                        None
+                    }
+                })
+                .unwrap();
 
             let device = {
                 let device_queue_create_info = [vk::DeviceQueueCreateInfo::builder()
@@ -34,7 +47,7 @@ impl Device {
 
                 let device = xr_instance
                     .create_vulkan_device(
-                        system,
+                        system_id,
                         std::mem::transmute(entry.static_fn().get_instance_proc_addr),
                         physical_device.as_raw() as _,
                         &device_create_info as *const _ as *const _,
@@ -47,20 +60,6 @@ impl Device {
             };
 
             let queue = device.get_device_queue(queue_family_index, 0);
-
-            let queue_family_index = vk_instance
-                .get_physical_device_queue_family_properties(physical_device)
-                .into_iter()
-                .enumerate()
-                .find_map(|(queue_family_index, info)| {
-                    if info.queue_flags.contains(vk::QueueFlags::GRAPHICS) {
-                        Some(queue_family_index as u32)
-                    } else {
-                        None
-                    }
-                })
-                .unwrap();
-
 
             Arc::new(Device {
                 device: device,

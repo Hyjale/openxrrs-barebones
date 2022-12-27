@@ -2,7 +2,7 @@ use ash::{vk::{self, Handle}};
 use std::sync::{Arc};
 
 pub struct PhysicalDevice {
-    physical_device: ash::vk::PhysicalDevice
+    pub physical_device: ash::vk::PhysicalDevice
 }
 
 impl PhysicalDevice {
