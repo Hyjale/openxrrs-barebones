@@ -1,6 +1,7 @@
 use std::sync::{Arc};
 
 use crate::graphics::{
+    command_pool::CommandPool,
     device::Device,
     instance::Instance,
     physical_device::PhysicalDevice,
@@ -9,6 +10,7 @@ use crate::graphics::{
 };
 
 pub struct Renderer {
+    command_pool: Arc<CommandPool>,
     device: Arc<Device>,
     instance: Arc<Instance>,
     physical_device: Arc<PhysicalDevice>,
@@ -35,7 +37,10 @@ impl Renderer {
 
         let pipeline = Pipeline::new(&device.device, render_pass.render_pass);
 
+        let command_pool = CommandPool::new(&device.device, device.queue_family_index);
+
         Renderer {
+            command_pool: command_pool,
             device: device,
             instance: instance,
             physical_device: physical_device,
