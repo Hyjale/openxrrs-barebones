@@ -4,6 +4,7 @@ use crate::graphics::{
     command_buffer::CommandBuffer,
     command_pool::CommandPool,
     device::Device,
+    fence::Fence,
     instance::Instance,
     physical_device::PhysicalDevice,
     pipeline::Pipeline,
@@ -14,6 +15,7 @@ pub struct Renderer {
     command_buffers: Arc<CommandBuffer>,
     command_pool: Arc<CommandPool>,
     device: Arc<Device>,
+    fences: Arc<Fence>,
     instance: Arc<Instance>,
     physical_device: Arc<PhysicalDevice>,
     pipeline: Arc<Pipeline>,
@@ -43,10 +45,13 @@ impl Renderer {
 
         let command_buffers = CommandBuffer::new(&device.device, command_pool.command_pool);
 
+        let fences = Fence::new(&device.device);
+
         Renderer {
             command_buffers: command_buffers,
             command_pool: command_pool,
             device: device,
+            fences: fences,
             instance: instance,
             physical_device: physical_device,
             pipeline: pipeline,

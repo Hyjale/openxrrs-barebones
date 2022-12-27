@@ -1,6 +1,7 @@
 pub mod command_buffer;
 pub mod command_pool;
 pub mod device;
+pub mod fence;
 pub mod instance;
 pub mod pipeline;
 pub mod physical_device;
