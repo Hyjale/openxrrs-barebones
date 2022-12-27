@@ -2,7 +2,7 @@ use ash::{vk::{self}};
 use std::sync::{Arc};
 
 pub struct CommandPool {
-    command_pool: ash::vk::CommandPool
+    pub command_pool: ash::vk::CommandPool
 }
 
 impl CommandPool {

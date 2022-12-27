@@ -1,6 +1,7 @@
 use std::sync::{Arc};
 
 use crate::graphics::{
+    command_buffer::CommandBuffer,
     command_pool::CommandPool,
     device::Device,
     instance::Instance,
@@ -10,6 +11,7 @@ use crate::graphics::{
 };
 
 pub struct Renderer {
+    command_buffers: Arc<CommandBuffer>,
     command_pool: Arc<CommandPool>,
     device: Arc<Device>,
     instance: Arc<Instance>,
@@ -39,7 +41,10 @@ impl Renderer {
 
         let command_pool = CommandPool::new(&device.device, device.queue_family_index);
 
+        let command_buffers = CommandBuffer::new(&device.device, command_pool.command_pool);
+
         Renderer {
+            command_buffers: command_buffers,
             command_pool: command_pool,
             device: device,
             instance: instance,
