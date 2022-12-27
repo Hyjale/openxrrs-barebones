@@ -3,9 +3,9 @@ use std::sync::{Arc};
 use ash::{vk::{self, Handle}};
 
 pub struct Device {
-    device: ash::Device,
-    queue: ash::vk::Queue,
-    queue_family_index: u32
+    pub device: ash::Device,
+    pub queue: ash::vk::Queue,
+    pub queue_family_index: u32
 }
 
 impl Device {
