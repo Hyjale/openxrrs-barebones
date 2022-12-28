@@ -12,18 +12,18 @@ use crate::graphics::{
 };
 
 pub struct Renderer {
-    command_buffers: Arc<CommandBuffer>,
-    command_pool: Arc<CommandPool>,
-    device: Arc<Device>,
-    fences: Arc<Fence>,
-    instance: Arc<Instance>,
-    physical_device: Arc<PhysicalDevice>,
-    pipeline: Arc<Pipeline>,
-    render_pass: Arc<RenderPass>,
+    pub command_buffers: Arc<CommandBuffer>,
+    pub command_pool: Arc<CommandPool>,
+    pub device: Arc<Device>,
+    pub fences: Arc<Fence>,
+    pub instance: Arc<Instance>,
+    pub physical_device: Arc<PhysicalDevice>,
+    pub pipeline: Arc<Pipeline>,
+    pub render_pass: Arc<RenderPass>,
 }
 
 impl Renderer {
-    pub fn new(xr_instance: openxr::Instance, system_id: openxr::SystemId) -> Self {
+    pub fn new(xr_instance: &openxr::Instance, system_id: openxr::SystemId) -> Self {
         let instance = Instance::new(&xr_instance, system_id);
 
         let physical_device = PhysicalDevice::new(&xr_instance,
