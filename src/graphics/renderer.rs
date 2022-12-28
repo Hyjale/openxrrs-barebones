@@ -5,7 +5,7 @@ use crate::graphics::{
     command_pool::CommandPool,
     device::Device,
     fence::Fence,
-    instance::Instance,
+    vk_instance::VkInstance,
     physical_device::PhysicalDevice,
     pipeline::Pipeline,
     render_pass::RenderPass
@@ -16,7 +16,7 @@ pub struct Renderer {
     pub command_pool: Arc<CommandPool>,
     pub device: Arc<Device>,
     pub fences: Arc<Fence>,
-    pub instance: Arc<Instance>,
+    pub vk_instance: Arc<VkInstance>,
     pub physical_device: Arc<PhysicalDevice>,
     pub pipeline: Arc<Pipeline>,
     pub render_pass: Arc<RenderPass>,
@@ -24,15 +24,15 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new(xr_instance: &openxr::Instance, system_id: openxr::SystemId) -> Self {
-        let instance = Instance::new(&xr_instance, system_id);
+        let vk_instance = VkInstance::new(&xr_instance, system_id);
 
         let physical_device = PhysicalDevice::new(&xr_instance,
-                                                  &instance.instance,
+                                                  &vk_instance.vk_instance,
                                                   system_id
         );
 
         let device = Device::new(&xr_instance,
-                                 &instance.instance,
+                                 &vk_instance.vk_instance,
                                  physical_device.physical_device,
                                  system_id
         );
@@ -52,7 +52,7 @@ impl Renderer {
             command_pool: command_pool,
             device: device,
             fences: fences,
-            instance: instance,
+            vk_instance: vk_instance,
             physical_device: physical_device,
             pipeline: pipeline,
             render_pass: render_pass,

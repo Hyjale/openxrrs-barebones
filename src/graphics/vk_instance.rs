@@ -2,14 +2,14 @@ use std::sync::{Arc};
 
 use ash::{vk::{self, Handle}};
 
-pub struct Instance {
-    pub instance: ash::Instance
+pub struct VkInstance {
+    pub vk_instance: ash::Instance
 }
 
-impl Instance {
-    pub fn new(instance: &openxr::Instance,
+impl VkInstance {
+    pub fn new(xr_instance: &openxr::Instance,
                system_id: openxr::SystemId,
-    ) -> Arc<Instance> {
+    ) -> Arc<VkInstance> {
         let entry = unsafe { ash::Entry::load().unwrap() };
 
         let api_version = vk::make_api_version(0, 1, 1, 0);
@@ -18,9 +18,9 @@ impl Instance {
             .engine_version(0)
             .api_version(api_version);
 
-        let instance = {
+        let vk_instance = {
             unsafe {
-                let instance = instance
+                let vk_instance = xr_instance
                     .create_vulkan_instance(
                         system_id,
                         std::mem::transmute(entry.static_fn().get_instance_proc_addr),
@@ -33,13 +33,13 @@ impl Instance {
 
                 ash::Instance::load(
                     entry.static_fn(),
-                    vk::Instance::from_raw(instance as _),
+                    vk::Instance::from_raw(vk_instance as _),
                 )
             }
         };
 
-        Arc::new(Instance {
-            instance: instance
+        Arc::new(VkInstance {
+            vk_instance: vk_instance
         })
     }
 }

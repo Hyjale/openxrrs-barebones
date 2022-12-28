@@ -3,7 +3,7 @@ pub mod command_pool;
 pub mod device;
 pub mod fence;
 pub mod framebuffer;
-pub mod instance;
+pub mod vk_instance;
 pub mod pipeline;
 pub mod physical_device;
 pub mod renderer;
