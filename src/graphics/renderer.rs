@@ -58,4 +58,16 @@ impl Renderer {
             render_pass: render_pass,
         }
     }
+
+    pub fn get_instance(&self) -> &ash::Instance {
+        &self.vk_instance.vk_instance
+    }
+
+    pub fn get_physical_device(&self) -> ash::vk::PhysicalDevice {
+        self.physical_device.physical_device
+    }
+
+    pub fn get_device(&self) -> &ash::Device {
+        &self.device.device
+    }
 }
