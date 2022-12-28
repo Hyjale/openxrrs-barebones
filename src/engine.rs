@@ -17,6 +17,7 @@ pub struct Engine {
     renderer: Renderer,
     swapchain: Option<Swapchain>,
     event_storage: xr::EventDataBuffer,
+    frame: u32,
     is_running: bool
 }
 
@@ -27,6 +28,8 @@ impl Engine {
 
         let xr_instance = XRInstance::new();
         let renderer = Renderer::new(&xr_instance.xr_instance, xr_instance.system_id);
+
+        let frame = 0;
 
         unsafe {
             let (session, mut frame_wait, mut frame_stream) = xr_instance.xr_instance
@@ -53,6 +56,7 @@ impl Engine {
                 spaces: spaces,
                 swapchain: swapchain,
                 event_storage: event_storage,
+                frame: 0,
                 is_running: false
             }
         }
