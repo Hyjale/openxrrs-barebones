@@ -54,7 +54,7 @@ impl XRInstance {
         Arc::new(XRInstance {
             xr_instance: xr_instance,
             system_id: system_id,
-            environment_blend_mode
+            environment_blend_mode: environment_blend_mode
         })
     }
 }
