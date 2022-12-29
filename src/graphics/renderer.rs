@@ -70,4 +70,20 @@ impl Renderer {
     pub fn get_device(&self) -> &ash::Device {
         &self.device.device
     }
+
+    pub fn get_render_pass(&self) -> ash::vk::RenderPass {
+        self.render_pass.render_pass
+    }
+
+    pub fn get_fences(&self) -> &Vec<ash::vk::Fence> {
+        &self.fences.fences
+    }
+
+    pub fn get_command_buffers(&self) -> &Vec<ash::vk::CommandBuffer> {
+        &self.command_buffers.command_buffers
+    }
+
+    pub fn get_pipeline(&self) -> ash::vk::Pipeline {
+        self.pipeline.pipeline
+    }
 }
