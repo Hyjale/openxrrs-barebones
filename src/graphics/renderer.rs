@@ -86,4 +86,8 @@ impl Renderer {
     pub fn get_pipeline(&self) -> ash::vk::Pipeline {
         self.pipeline.pipeline
     }
+
+    pub fn get_command_pool(&self) -> ash::vk::CommandPool {
+        self.command_pool.command_pool
+    }
 }
