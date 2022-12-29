@@ -42,4 +42,8 @@ impl VkInstance {
             vk_instance: vk_instance
         })
     }
+
+    pub fn destroy_instance(&self) {
+        unsafe { self.vk_instance.destroy_instance(None); }
+    }
 }
