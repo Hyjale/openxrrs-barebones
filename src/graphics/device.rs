@@ -170,7 +170,7 @@ impl Device {
                                  instance_count,
                                  first_vertex,
                                  first_instance
-            )
+            );
         }
     }
 
