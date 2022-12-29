@@ -4,7 +4,7 @@ use std::sync::{Arc};
 const PIPELINE_DEPTH: u32 = 2;
 
 pub struct CommandBuffer {
-    command_buffer: Vec<ash::vk::CommandBuffer>
+    pub command_buffers: Vec<ash::vk::CommandBuffer>
 }
 
 impl CommandBuffer {
@@ -19,7 +19,7 @@ impl CommandBuffer {
                 .unwrap();
 
             Arc::new(CommandBuffer {
-                command_buffer: command_buffers
+                command_buffers: command_buffers
             })
         }
     }

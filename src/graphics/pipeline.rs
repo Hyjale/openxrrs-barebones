@@ -6,8 +6,8 @@ use crate::graphics::{
 };
 
 pub struct Pipeline {
-    pipeline: ash::vk::Pipeline,
-    bind_point: ash::vk::PipelineBindPoint
+    pub pipeline: ash::vk::Pipeline,
+    pub bind_point: ash::vk::PipelineBindPoint
 }
 
 impl Pipeline {

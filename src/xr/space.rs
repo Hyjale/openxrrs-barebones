@@ -1,7 +1,7 @@
 use openxr as xr;
 
 pub struct Space {
-    stage_space: openxr::Space
+    pub stage_space: openxr::Space
 }
 
 impl Space {

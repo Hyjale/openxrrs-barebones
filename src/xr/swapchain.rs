@@ -1,5 +1,3 @@
-use std::sync::{Arc};
-
 use ash::{vk::{self, Handle}};
 use openxr as xr;
 
@@ -12,9 +10,9 @@ const VIEW_COUNT: u32 = 2;
 const VIEW_TYPE: xr::ViewConfigurationType = xr::ViewConfigurationType::PRIMARY_STEREO;
 
 pub struct Swapchain {
-    resolution: vk::Extent2D,
-    handle: xr::Swapchain<xr::Vulkan>,
-    framebuffers: Vec<Framebuffer>
+    pub resolution: vk::Extent2D,
+    pub handle: xr::Swapchain<xr::Vulkan>,
+    pub framebuffers: Vec<Framebuffer>
 }
 
 impl Swapchain {
@@ -23,7 +21,7 @@ impl Swapchain {
                session: &openxr::Session<xr::Vulkan>,
                system: openxr::SystemId,
                render_pass: ash::vk::RenderPass
-    ) -> Arc<Swapchain> {
+    ) -> Swapchain {
         unsafe {
             let views = instance
                 .enumerate_view_configuration_views(system, VIEW_TYPE)
@@ -87,11 +85,11 @@ impl Swapchain {
                 })
                 .collect();
 
-            Arc::new(Swapchain {
+            Swapchain {
                 resolution,
                 handle,
                 framebuffers
-            })
+            }
         }
     }
 }

@@ -1,9 +1,9 @@
 use openxr as xr;
 
 pub struct Action {
-    action_set: openxr::ActionSet,
-    left_action: openxr::Action<xr::Posef>,
-    right_action: openxr::Action<xr::Posef>,
+    pub action_set: openxr::ActionSet,
+    pub left_action: openxr::Action<xr::Posef>,
+    pub right_action: openxr::Action<xr::Posef>,
 }
 
 impl Action {
