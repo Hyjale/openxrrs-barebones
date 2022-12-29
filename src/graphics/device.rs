@@ -81,7 +81,7 @@ impl Device {
                     &vk::CommandBufferBeginInfo::builder()
                         .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT),
                 )
-                .expect("Begin command buffer failed");
+                .unwrap()
         }
     }
 
@@ -89,24 +89,104 @@ impl Device {
         unsafe {
             self.device
                 .end_command_buffer(cmd_buffer)
-                .expect("End command buffer failed");
+                .unwrap()
         }
     }
 
+    pub fn cmd_begin_render_pass(&self,
+                             cmd_buffer: ash::vk::CommandBuffer,
+                             render_pass: ash::vk::RenderPass,
+                             framebuffer: ash::vk::Framebuffer,
+                             extent: ash::vk::Extent2D
+    ) {
+        unsafe {
+            self.device.cmd_begin_render_pass(
+                cmd_buffer,
+                &vk::RenderPassBeginInfo::builder()
+                    .render_pass(render_pass)
+                    .framebuffer(framebuffer)
+                    .render_area(vk::Rect2D {
+                        offset: vk::Offset2D::default(),
+                        extent: extent,
+                    })
+                    .clear_values(&[vk::ClearValue {
+                        color: vk::ClearColorValue {
+                            float32: [0.0, 0.0, 0.0, 1.0],
+                        },
+                    }]),
+                vk::SubpassContents::INLINE,
+            );
+        }
+    }
+
+    pub fn cmd_end_render_pass(&self, cmd_buffer: ash::vk::CommandBuffer) {
+        unsafe { self.device.cmd_end_render_pass(cmd_buffer); }
+    }
+
+    pub fn wait_for_fences(&self, fences: ash::vk::Fence) {
+        unsafe {
+            self.device
+                .wait_for_fences(&[fences], true, u64::MAX)
+                .unwrap();
+        }
+    }
+
+    pub fn reset_fences(&self, fences: ash::vk::Fence) {
+        unsafe {
+            self.device.reset_fences(&[fences]).unwrap();
+        }
+    }
+
+    pub fn cmd_set_viewport_and_scissor(&self,
+                                        cmd_buffer: ash::vk::CommandBuffer,
+                                        viewport: ash::vk::Viewport,
+                                        scissor: ash::vk::Rect2D
+    ) {
+        unsafe {
+            self.device.cmd_set_viewport(cmd_buffer, 0, &[viewport]);
+            self.device.cmd_set_scissor(cmd_buffer, 0, &[scissor]);
+        }
+    }
+
+    pub fn cmd_bind_pipeline(&self,
+                             cmd_buffer: ash::vk::CommandBuffer,
+                             pipeline: ash::vk::Pipeline
+    ) {
+        unsafe {
+            self.device.cmd_bind_pipeline(cmd_buffer, vk::PipelineBindPoint::GRAPHICS, pipeline);
+        }
+    }
+
+    pub fn cmd_draw(&self,
+                    cmd_buffer: ash::vk::CommandBuffer,
+                    vertex_count: u32,
+                    instance_count: u32,
+                    first_vertex: u32,
+                    first_instance: u32,
+    ) {
+        unsafe {
+            self.device.cmd_draw(cmd_buffer,
+                                 vertex_count,
+                                 instance_count,
+                                 first_vertex,
+                                 first_instance
+            )
+        }
+    }
+
+
     pub fn queue_submit(&self,
-                        queue: ash::vk::Queue,
                         cmd_buffer: ash::vk::CommandBuffer,
                         fence: ash::vk::Fence
-
     ) {
         unsafe {
             self.device
                 .queue_submit(
-                    queue,
+                    self.queue,
                     &[vk::SubmitInfo::builder().command_buffers(&[cmd_buffer]).build()],
                     fence
                 )
-                .expect("Queue submit failed")
+                .unwrap()
         }
     }
 }
