@@ -123,10 +123,10 @@ impl Device {
         unsafe { self.device.cmd_end_render_pass(cmd_buffer); }
     }
 
-    pub fn wait_for_fences(&self, fences: ash::vk::Fence) {
+    pub fn wait_for_fences(&self, fences: &Vec<ash::vk::Fence>, timeout: u64) {
         unsafe {
             self.device
-                .wait_for_fences(&[fences], true, u64::MAX)
+                .wait_for_fences(fences, true, timeout)
                 .unwrap();
         }
     }
@@ -174,7 +174,6 @@ impl Device {
         }
     }
 
-
     pub fn queue_submit(&self,
                         cmd_buffer: ash::vk::CommandBuffer,
                         fence: ash::vk::Fence
@@ -187,6 +186,54 @@ impl Device {
                     fence
                 )
                 .unwrap()
+        }
+    }
+
+    pub fn destroy_fence(&self, fence: ash::vk::Fence) {
+        unsafe {
+            self.device.destroy_fence(fence, None);
+        }
+    }
+
+    pub fn destroy_framebuffer(&self, framebuffer: ash::vk::Framebuffer) {
+        unsafe {
+            self.device.destroy_framebuffer(framebuffer, None);
+        }
+    }
+
+    pub fn destroy_image_view(&self, image_view: ash::vk::ImageView) {
+        unsafe {
+            self.device.destroy_image_view(image_view, None);
+        }
+    }
+
+    pub fn destroy_pipeline(&self, pipeline: ash::vk::Pipeline) {
+        unsafe {
+            self.device.destroy_pipeline(pipeline, None);
+        }
+    }
+
+    pub fn destroy_pipeline_layout(&self, pipeline_layout: ash::vk::PipelineLayout) {
+        unsafe {
+            self.device.destroy_pipeline_layout(pipeline_layout, None);
+        }
+    }
+
+    pub fn destroy_command_pool(&self, cmd_pool: ash::vk::CommandPool) {
+        unsafe {
+            self.device.destroy_command_pool(cmd_pool, None);
+        }
+    }
+
+    pub fn destroy_render_pass(&self, render_pass: ash::vk::RenderPass) {
+        unsafe {
+            self.device.destroy_render_pass(render_pass, None);
+        }
+    }
+
+    pub fn destroy_device(&self) {
+        unsafe {
+            self.device.destroy_device(None);
         }
     }
 }
