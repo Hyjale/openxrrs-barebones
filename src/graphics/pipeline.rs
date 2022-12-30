@@ -7,6 +7,7 @@ use crate::graphics::{
 
 pub struct Pipeline {
     pub pipeline: ash::vk::Pipeline,
+    pub pipeline_layout: ash::vk::PipelineLayout,
     pub bind_point: ash::vk::PipelineBindPoint
 }
 
@@ -108,8 +109,12 @@ impl Pipeline {
                 )
                 .unwrap()[0];
 
+            device.destroy_shader_module(vert_module, None);
+            device.destroy_shader_module(frag_module, None);
+
             Arc::new(Pipeline {
                 pipeline: pipeline,
+                pipeline_layout: pipeline_layout,
                 bind_point: vk::PipelineBindPoint::GRAPHICS
             })
         }
