@@ -1,18 +1,23 @@
 use ash::{vk::{self}};
 use std::sync::{Arc};
 
+use crate::graphics::{
+    device::Device
+};
+
 const PIPELINE_DEPTH: u32 = 2;
 
 pub struct Fence {
-    pub fences: Vec<ash::vk::Fence>
+    fences: Vec<ash::vk::Fence>
 }
 
 impl Fence {
-    pub fn new(device: &ash::Device) -> Arc<Fence> {
+    pub fn new(device: &Arc<Device>) -> Arc<Fence> {
         unsafe {
             let fences = (0..PIPELINE_DEPTH)
                 .map(|_| {
                     device
+                        .get()
                         .create_fence(
                             &vk::FenceCreateInfo::builder().flags(vk::FenceCreateFlags::SIGNALED),
                             None,
@@ -25,5 +30,9 @@ impl Fence {
                 fences: fences
             })
         }
+    }
+
+    pub fn get(&self) -> &Vec<ash::vk::Fence> {
+        &self.fences
     }
 }

@@ -1,19 +1,23 @@
+use ash::{vk::{self}};
 use std::sync::{Arc};
 
-use ash::{vk::{self}};
+use crate::graphics::{
+    device::Device,
+};
 
 pub const COLOR_FORMAT: vk::Format = vk::Format::R8G8B8A8_SRGB;
 pub const VIEW_COUNT: u32 = 2;
 
 pub struct RenderPass {
-    pub render_pass: ash::vk::RenderPass
+    render_pass: ash::vk::RenderPass
 }
 
 impl RenderPass {
-    pub fn new(device: &ash::Device) -> Arc<RenderPass> {
+    pub fn new(device: &Arc<Device>) -> Arc<RenderPass> {
         unsafe {
             let view_mask = !(!0 << VIEW_COUNT);
             let render_pass = device
+                .get()
                 .create_render_pass(
                     &vk::RenderPassCreateInfo::builder()
                         .attachments(&[vk::AttachmentDescription {
@@ -53,5 +57,9 @@ impl RenderPass {
                 render_pass: render_pass
             })
         }
+    }
+
+    pub fn get(&self) -> ash::vk::RenderPass {
+        self.render_pass
     }
 }

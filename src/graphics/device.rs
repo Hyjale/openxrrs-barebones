@@ -1,24 +1,29 @@
+use ash::{vk::{self, Handle}};
 use std::sync::{Arc};
 
-use ash::{vk::{self, Handle}};
+use crate::graphics::{
+    physical_device::PhysicalDevice,
+    vk_instance::VkInstance
+};
 
 pub struct Device {
-    pub device: ash::Device,
-    pub queue: ash::vk::Queue,
-    pub queue_family_index: u32
+    device: ash::Device,
+    queue: ash::vk::Queue,
+    queue_family_index: u32
 }
 
 impl Device {
     pub fn new(xr_instance: &openxr::Instance,
-               vk_instance: &ash::Instance,
-               physical_device: ash::vk::PhysicalDevice,
+               vk_instance: &Arc<VkInstance>,
+               physical_device: &Arc<PhysicalDevice>,
                system_id: openxr::SystemId,
     ) -> Arc<Device> {
         unsafe {
             let entry = ash::Entry::load().unwrap();
 
             let queue_family_index = vk_instance
-                .get_physical_device_queue_family_properties(physical_device)
+                .get()
+                .get_physical_device_queue_family_properties(physical_device.get())
                 .into_iter()
                 .enumerate()
                 .find_map(|(queue_family_index, info)| {
@@ -49,14 +54,14 @@ impl Device {
                     .create_vulkan_device(
                         system_id,
                         std::mem::transmute(entry.static_fn().get_instance_proc_addr),
-                        physical_device.as_raw() as _,
+                        physical_device.get().as_raw() as _,
                         &device_create_info as *const _ as *const _,
                     )
                     .expect("OpenXR error creating Vulkan device")
                     .map_err(vk::Result::from_raw)
                     .expect("Vulkan error creating Vulkan device");
 
-                ash::Device::load(vk_instance.fp_v1_0(), vk::Device::from_raw(device as _))
+                ash::Device::load(vk_instance.get().fp_v1_0(), vk::Device::from_raw(device as _))
             };
 
             let queue = device.get_device_queue(queue_family_index, 0);
@@ -67,6 +72,10 @@ impl Device {
                 queue_family_index: queue_family_index
             })
         }
+    }
+
+    pub fn get(&self) -> &ash::Device {
+        &self.device
     }
 
     pub fn queue_family_index(&self) -> u32 {

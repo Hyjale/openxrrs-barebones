@@ -2,21 +2,24 @@ use ash::{vk::{self}};
 use std::sync::{Arc};
 
 use crate::graphics::{
+    device::Device,
+    render_pass::RenderPass,
     shader_module::ShaderModule
 };
 
 pub struct Pipeline {
-    pub pipeline: ash::vk::Pipeline,
-    pub pipeline_layout: ash::vk::PipelineLayout,
-    pub bind_point: ash::vk::PipelineBindPoint
+    pipeline: ash::vk::Pipeline,
+    pipeline_layout: ash::vk::PipelineLayout,
+    bind_point: ash::vk::PipelineBindPoint
 }
 
 impl Pipeline {
-    pub fn new(device: &ash::Device,
-               render_pass: ash::vk::RenderPass
+    pub fn new(device: &Arc<Device>,
+               render_pass: &Arc<RenderPass>
     ) -> Arc<Pipeline> {
         unsafe {
             let pipeline_layout = device
+                .get()
                 .create_pipeline_layout(
                     &vk::PipelineLayoutCreateInfo::builder().set_layouts(&[]),
                     None,
@@ -37,6 +40,7 @@ impl Pipeline {
             let frag_module = ShaderModule::new(device, include_bytes!("triangle.frag.spv"));
 
             let pipeline = device
+                .get()
                 .create_graphics_pipelines(
                     vk::PipelineCache::null(),
                     &[vk::GraphicsPipelineCreateInfo::builder()
@@ -102,15 +106,15 @@ impl Pipeline {
                             ]),
                         )
                         .layout(pipeline_layout)
-                        .render_pass(render_pass)
+                        .render_pass(render_pass.get())
                         .subpass(0)
                         .build()],
                     None,
                 )
                 .unwrap()[0];
 
-            device.destroy_shader_module(vert_module, None);
-            device.destroy_shader_module(frag_module, None);
+            device.get().destroy_shader_module(vert_module, None);
+            device.get().destroy_shader_module(frag_module, None);
 
             Arc::new(Pipeline {
                 pipeline: pipeline,
@@ -120,7 +124,15 @@ impl Pipeline {
         }
     }
 
+    pub fn get(&self) -> ash::vk::Pipeline {
+        self.pipeline
+    }
+
     pub fn bind_point(&self) -> vk::PipelineBindPoint {
         self.bind_point
+    }
+
+    pub fn pipeline_layout(&self) -> ash::vk::PipelineLayout {
+        self.pipeline_layout
     }
 }

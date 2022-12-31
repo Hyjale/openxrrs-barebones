@@ -3,7 +3,7 @@ use std::sync::{Arc};
 use ash::{vk::{self, Handle}};
 
 pub struct VkInstance {
-    pub vk_instance: ash::Instance
+    vk_instance: ash::Instance
 }
 
 impl VkInstance {
@@ -41,6 +41,10 @@ impl VkInstance {
         Arc::new(VkInstance {
             vk_instance: vk_instance
         })
+    }
+
+    pub fn get(&self) -> &ash::Instance {
+        &self.vk_instance
     }
 
     pub fn destroy_instance(&self) {

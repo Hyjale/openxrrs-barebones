@@ -27,25 +27,25 @@ impl Renderer {
         let vk_instance = VkInstance::new(&xr_instance, system_id);
 
         let physical_device = PhysicalDevice::new(&xr_instance,
-                                                  &vk_instance.vk_instance,
+                                                  &vk_instance,
                                                   system_id
         );
 
         let device = Device::new(&xr_instance,
-                                 &vk_instance.vk_instance,
-                                 physical_device.physical_device,
+                                 &vk_instance,
+                                 &physical_device,
                                  system_id
         );
 
-        let render_pass = RenderPass::new(&device.device);
+        let render_pass = RenderPass::new(&device);
 
-        let pipeline = Pipeline::new(&device.device, render_pass.render_pass);
+        let pipeline = Pipeline::new(&device, &render_pass);
 
-        let command_pool = CommandPool::new(&device.device, device.queue_family_index);
+        let command_pool = CommandPool::new(&device);
 
-        let command_buffers = CommandBuffer::new(&device.device, command_pool.command_pool);
+        let command_buffers = CommandBuffer::new(&device, &command_pool);
 
-        let fences = Fence::new(&device.device);
+        let fences = Fence::new(&device);
 
         Renderer {
             command_buffers: command_buffers,
@@ -57,37 +57,5 @@ impl Renderer {
             pipeline: pipeline,
             render_pass: render_pass,
         }
-    }
-
-    pub fn get_instance(&self) -> &ash::Instance {
-        &self.vk_instance.vk_instance
-    }
-
-    pub fn get_physical_device(&self) -> ash::vk::PhysicalDevice {
-        self.physical_device.physical_device
-    }
-
-    pub fn get_device(&self) -> &ash::Device {
-        &self.device.device
-    }
-
-    pub fn get_render_pass(&self) -> ash::vk::RenderPass {
-        self.render_pass.render_pass
-    }
-
-    pub fn get_fences(&self) -> &Vec<ash::vk::Fence> {
-        &self.fences.fences
-    }
-
-    pub fn get_command_buffers(&self) -> &Vec<ash::vk::CommandBuffer> {
-        &self.command_buffers.command_buffers
-    }
-
-    pub fn get_pipeline(&self) -> ash::vk::Pipeline {
-        self.pipeline.pipeline
-    }
-
-    pub fn get_command_pool(&self) -> ash::vk::CommandPool {
-        self.command_pool.command_pool
     }
 }
