@@ -51,6 +51,24 @@ impl XRInstance {
             .enumerate_environment_blend_modes(system_id, VIEW_TYPE)
             .unwrap()[0];
 
+        let vk_version = xr::Version::new(1, 1, 0);
+
+        let graphics_requirements = xr_instance
+            .graphics_requirements::<xr::Vulkan>(system_id)
+            .unwrap();
+
+        if vk_version < graphics_requirements.min_api_version_supported
+            || vk_version.major() > graphics_requirements.max_api_version_supported.major()
+        {
+            panic!(
+                "Vulkan version {} not supported.
+                OpenXR runtime requires Vulkan version > {}, < {}.0.0",
+                vk_version,
+                graphics_requirements.min_api_version_supported,
+                graphics_requirements.max_api_version_supported.major() + 1
+            );
+        }
+
         Arc::new(XRInstance {
             xr_instance: xr_instance,
             system_id: system_id,
