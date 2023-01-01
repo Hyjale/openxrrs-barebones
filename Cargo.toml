@@ -14,6 +14,9 @@ ndk-glue = "0.6.1"
 
 [[example]]
 name = "demo"
+
+[[example]]
+name = "demo-android"
 path = "examples/demo.rs"
 crate-type = ["cdylib"]
 
