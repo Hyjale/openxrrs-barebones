@@ -1,13 +1,12 @@
 use std::sync::{Arc};
 
-use ash::{vk::{self, Handle}};
+use ash::{vk::self};
 
 use crate::graphics::{
     command_buffer::CommandBuffer,
     command_pool::CommandPool,
     device::Device,
     fence::Fence,
-    framebuffer::Framebuffer,
     vk_instance::VkInstance,
     physical_device::PhysicalDevice,
     pipeline::Pipeline,

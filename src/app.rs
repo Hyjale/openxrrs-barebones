@@ -1,9 +1,6 @@
-use ash::{vk::{self, Handle}};
+use ash::{vk::Handle};
 use openxr as xr;
-use std::{
-    sync::{Arc},
-    time::Duration
-};
+use std::{sync::Arc};
 
 use crate::{
     graphics::{renderer::Renderer},

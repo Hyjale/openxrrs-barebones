@@ -10,7 +10,6 @@ use crate::graphics::{
 pub struct Pipeline {
     pipeline: ash::vk::Pipeline,
     pipeline_layout: ash::vk::PipelineLayout,
-    bind_point: ash::vk::PipelineBindPoint
 }
 
 impl Pipeline {
@@ -119,17 +118,12 @@ impl Pipeline {
             Arc::new(Pipeline {
                 pipeline: pipeline,
                 pipeline_layout: pipeline_layout,
-                bind_point: vk::PipelineBindPoint::GRAPHICS
             })
         }
     }
 
     pub fn get(&self) -> ash::vk::Pipeline {
         self.pipeline
-    }
-
-    pub fn bind_point(&self) -> vk::PipelineBindPoint {
-        self.bind_point
     }
 
     pub fn pipeline_layout(&self) -> ash::vk::PipelineLayout {
