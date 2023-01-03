@@ -198,9 +198,11 @@ impl Device {
         }
     }
 
-    pub fn destroy_fence(&self, fence: ash::vk::Fence) {
+    pub fn destroy_fences(&self, fences: &Vec<ash::vk::Fence>) {
         unsafe {
-            self.device.destroy_fence(fence, None);
+            for fence in fences {
+                self.device.destroy_fence(*fence, None);
+            }
         }
     }
 
