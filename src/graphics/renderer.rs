@@ -99,4 +99,16 @@ impl Renderer {
         self.device.wait_for_fences(&[self.fences.get()[frame]].to_vec(), u64::MAX);
         self.device.reset_fences(self.fences.get()[frame]);
     }
+
+    pub fn destroy(&self) {
+        self.device.wait_for_fences(self.fences.get(), !0);
+
+        self.device.destroy_fences(self.fences.get());
+        self.device.destroy_pipeline(self.pipeline.get());
+        self.device.destroy_pipeline_layout(self.pipeline.pipeline_layout());
+        self.device.destroy_command_pool(self.command_pool.get());
+        self.device.destroy_render_pass(self.render_pass.get());
+        self.device.destroy_device();
+        self.vk_instance.destroy_instance();
+    }
 }
