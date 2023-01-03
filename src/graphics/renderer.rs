@@ -1,10 +1,13 @@
 use std::sync::{Arc};
 
+use ash::{vk::{self, Handle}};
+
 use crate::graphics::{
     command_buffer::CommandBuffer,
     command_pool::CommandPool,
     device::Device,
     fence::Fence,
+    framebuffer::Framebuffer,
     vk_instance::VkInstance,
     physical_device::PhysicalDevice,
     pipeline::Pipeline,
@@ -57,5 +60,43 @@ impl Renderer {
             pipeline: pipeline,
             render_pass: render_pass,
         }
+    }
+
+    pub fn draw(&self,
+                frame: usize,
+                framebuffer: ash::vk::Framebuffer,
+                resolution: ash::vk::Extent2D
+    ) {
+        let cmd_buffer = self.command_buffers.get()[frame];
+        self.device.begin_command_buffer(cmd_buffer);
+
+        self.device.cmd_begin_render_pass(cmd_buffer,
+                                          self.render_pass.get(),
+                                          framebuffer,
+                                          resolution
+        );
+        let viewports = vk::Viewport {
+            x: 0.0,
+            y: 0.0,
+            width: resolution.width as f32,
+            height: resolution.height as f32,
+            min_depth: 0.0,
+            max_depth: 1.0,
+        };
+        let scissors = vk::Rect2D {
+            offset: vk::Offset2D { x: 0, y: 0 },
+            extent: resolution,
+        };
+        self.device.cmd_set_viewport_and_scissor(cmd_buffer, viewports, scissors);
+        self.device.cmd_bind_pipeline(cmd_buffer, self.pipeline.get());
+        self.device.cmd_draw(cmd_buffer, 3, 1, 0, 0);
+        self.device.cmd_end_render_pass(cmd_buffer);
+
+        self.device.end_command_buffer(cmd_buffer);
+
+        self.device.queue_submit(cmd_buffer, self.fences.get()[frame]);
+
+        self.device.wait_for_fences(&[self.fences.get()[frame]].to_vec(), u64::MAX);
+        self.device.reset_fences(self.fences.get()[frame]);
     }
 }
