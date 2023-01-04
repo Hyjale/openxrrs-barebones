@@ -1,3 +1,3 @@
 pub mod app;
-mod graphics;
-mod xr;
+pub mod graphics;
+pub mod xr;
