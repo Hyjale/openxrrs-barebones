@@ -6,17 +6,17 @@ use crate::graphics::{
 };
 
 pub struct CommandPool {
-    command_pool: ash::vk::CommandPool
+    pub handle: ash::vk::CommandPool
 }
 
 impl CommandPool {
     pub fn new(device: &Arc<Device>) -> Arc<CommandPool> {
         unsafe {
-            let command_pool = device
-                .get()
+            let handle = device
+                .handle
                 .create_command_pool(
                     &vk::CommandPoolCreateInfo::builder()
-                        .queue_family_index(device.queue_family_index())
+                        .queue_family_index(device.queue_family_index)
                         .flags(
                             vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER
                                 | vk::CommandPoolCreateFlags::TRANSIENT,
@@ -26,12 +26,8 @@ impl CommandPool {
                 .unwrap();
 
             Arc::new(CommandPool {
-                command_pool: command_pool
+                handle
             })
         }
-    }
-
-    pub fn get(&self) -> ash::vk::CommandPool {
-        self.command_pool
     }
 }

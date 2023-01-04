@@ -41,10 +41,10 @@ impl App {
                 .create_session::<xr::Vulkan>(
                     self.xr_instance.system_id,
                     &xr::vulkan::SessionCreateInfo {
-                        instance: self.renderer.vk_instance.get().handle().as_raw() as _,
-                        physical_device: self.renderer.physical_device.get().as_raw() as _,
-                        device: self.renderer.device.get().handle().as_raw() as _,
-                        queue_family_index: self.renderer.device.queue_family_index(),
+                        instance: self.renderer.vk_instance.handle.handle().as_raw() as _,
+                        physical_device: self.renderer.physical_device.handle.as_raw() as _,
+                        device: self.renderer.device.handle.handle().as_raw() as _,
+                        queue_family_index: self.renderer.device.queue_family_index,
                         queue_index: 0,
                     },
                 )
@@ -107,10 +107,10 @@ impl App {
 
         let swapchain = self.swapchain.get_or_insert_with(|| {
             Swapchain::new(&self.xr_instance.xr_instance,
-                            &self.renderer.device.get(),
+                            &self.renderer.device.handle,
                             &session,
                             self.xr_instance.system_id,
-                            self.renderer.render_pass.get()
+                            self.renderer.render_pass.handle
             )
         });
 

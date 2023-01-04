@@ -9,15 +9,15 @@ pub const COLOR_FORMAT: vk::Format = vk::Format::R8G8B8A8_SRGB;
 pub const VIEW_COUNT: u32 = 2;
 
 pub struct RenderPass {
-    render_pass: ash::vk::RenderPass
+    pub handle: ash::vk::RenderPass
 }
 
 impl RenderPass {
     pub fn new(device: &Arc<Device>) -> Arc<RenderPass> {
         unsafe {
             let view_mask = !(!0 << VIEW_COUNT);
-            let render_pass = device
-                .get()
+            let handle = device
+                .handle
                 .create_render_pass(
                     &vk::RenderPassCreateInfo::builder()
                         .attachments(&[vk::AttachmentDescription {
@@ -54,12 +54,8 @@ impl RenderPass {
                 .unwrap();
 
             Arc::new(RenderPass {
-                render_pass: render_pass
+                handle
             })
         }
-    }
-
-    pub fn get(&self) -> ash::vk::RenderPass {
-        self.render_pass
     }
 }

@@ -3,7 +3,7 @@ use std::sync::{Arc};
 use ash::{vk::{self, Handle}};
 
 pub struct VkInstance {
-    vk_instance: ash::Instance
+    pub handle: ash::Instance
 }
 
 impl VkInstance {
@@ -18,7 +18,7 @@ impl VkInstance {
             .engine_version(0)
             .api_version(api_version);
 
-        let vk_instance = {
+        let handle  = {
             unsafe {
                 let vk_instance = xr_instance
                     .create_vulkan_instance(
@@ -39,15 +39,11 @@ impl VkInstance {
         };
 
         Arc::new(VkInstance {
-            vk_instance: vk_instance
+            handle
         })
     }
 
-    pub fn get(&self) -> &ash::Instance {
-        &self.vk_instance
-    }
-
     pub fn destroy_instance(&self) {
-        unsafe { self.vk_instance.destroy_instance(None); }
+        unsafe { self.handle.destroy_instance(None); }
     }
 }

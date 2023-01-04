@@ -8,16 +8,16 @@ use crate::graphics::{
 const PIPELINE_DEPTH: u32 = 2;
 
 pub struct Fence {
-    fences: Vec<ash::vk::Fence>
+    pub handle: Vec<ash::vk::Fence>
 }
 
 impl Fence {
     pub fn new(device: &Arc<Device>) -> Arc<Fence> {
         unsafe {
-            let fences = (0..PIPELINE_DEPTH)
+            let handle = (0..PIPELINE_DEPTH)
                 .map(|_| {
                     device
-                        .get()
+                        .handle
                         .create_fence(
                             &vk::FenceCreateInfo::builder().flags(vk::FenceCreateFlags::SIGNALED),
                             None,
@@ -27,12 +27,8 @@ impl Fence {
                 .collect::<Vec<_>>();
 
             Arc::new(Fence {
-                fences: fences
+                handle
             })
         }
-    }
-
-    pub fn get(&self) -> &Vec<ash::vk::Fence> {
-        &self.fences
     }
 }

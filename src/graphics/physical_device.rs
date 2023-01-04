@@ -6,7 +6,7 @@ use crate::graphics::{
 };
 
 pub struct PhysicalDevice {
-    physical_device: ash::vk::PhysicalDevice
+    pub handle: ash::vk::PhysicalDevice
 }
 
 impl PhysicalDevice {
@@ -14,20 +14,16 @@ impl PhysicalDevice {
                vk_instance: &Arc<VkInstance>,
                system_id: openxr::SystemId
     ) -> Arc<PhysicalDevice> {
-        let physical_device = vk::PhysicalDevice::from_raw(
+        let handle = vk::PhysicalDevice::from_raw(
             unsafe {
                 xr_instance
-                    .vulkan_graphics_device(system_id, vk_instance.get().handle().as_raw() as _)
+                    .vulkan_graphics_device(system_id, vk_instance.handle.handle().as_raw() as _)
                     .unwrap() as _
             }
         );
 
         Arc::new(PhysicalDevice {
-            physical_device: physical_device
+            handle
         })
-    }
-
-    pub fn get(&self) -> ash::vk::PhysicalDevice {
-       self.physical_device
     }
 }

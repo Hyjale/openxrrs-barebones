@@ -8,8 +8,8 @@ use crate::graphics::{
 };
 
 pub struct Pipeline {
-    pipeline: ash::vk::Pipeline,
-    pipeline_layout: ash::vk::PipelineLayout,
+    pub handle: ash::vk::Pipeline,
+    pub pipeline_layout: ash::vk::PipelineLayout,
 }
 
 impl Pipeline {
@@ -18,7 +18,7 @@ impl Pipeline {
     ) -> Arc<Pipeline> {
         unsafe {
             let pipeline_layout = device
-                .get()
+                .handle
                 .create_pipeline_layout(
                     &vk::PipelineLayoutCreateInfo::builder().set_layouts(&[]),
                     None,
@@ -38,8 +38,8 @@ impl Pipeline {
             let vert_module = ShaderModule::new(device, include_bytes!("triangle.vert.spv"));
             let frag_module = ShaderModule::new(device, include_bytes!("triangle.frag.spv"));
 
-            let pipeline = device
-                .get()
+            let handle = device
+                .handle
                 .create_graphics_pipelines(
                     vk::PipelineCache::null(),
                     &[vk::GraphicsPipelineCreateInfo::builder()
@@ -105,28 +105,20 @@ impl Pipeline {
                             ]),
                         )
                         .layout(pipeline_layout)
-                        .render_pass(render_pass.get())
+                        .render_pass(render_pass.handle)
                         .subpass(0)
                         .build()],
                     None,
                 )
                 .unwrap()[0];
 
-            device.get().destroy_shader_module(vert_module, None);
-            device.get().destroy_shader_module(frag_module, None);
+            device.handle.destroy_shader_module(vert_module, None);
+            device.handle.destroy_shader_module(frag_module, None);
 
             Arc::new(Pipeline {
-                pipeline: pipeline,
-                pipeline_layout: pipeline_layout,
+                handle,
+                pipeline_layout,
             })
         }
-    }
-
-    pub fn get(&self) -> ash::vk::Pipeline {
-        self.pipeline
-    }
-
-    pub fn pipeline_layout(&self) -> ash::vk::PipelineLayout {
-        self.pipeline_layout
     }
 }

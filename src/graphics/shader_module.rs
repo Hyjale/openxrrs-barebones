@@ -20,7 +20,7 @@ impl ShaderModule {
             let code = read_spv(&mut Cursor::new(path)).unwrap();
 
             let shader_module = device
-                .get()
+                .handle
                 .create_shader_module(&vk::ShaderModuleCreateInfo::builder().code(&code), None)
                 .unwrap();
 

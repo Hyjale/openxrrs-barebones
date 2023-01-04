@@ -66,11 +66,11 @@ impl Renderer {
                 framebuffer: ash::vk::Framebuffer,
                 resolution: ash::vk::Extent2D
     ) {
-        let cmd_buffer = self.command_buffers.get()[frame];
+        let cmd_buffer = self.command_buffers.handle[frame];
         self.device.begin_command_buffer(cmd_buffer);
 
         self.device.cmd_begin_render_pass(cmd_buffer,
-                                          self.render_pass.get(),
+                                          self.render_pass.handle,
                                           framebuffer,
                                           resolution
         );
@@ -87,26 +87,26 @@ impl Renderer {
             extent: resolution,
         };
         self.device.cmd_set_viewport_and_scissor(cmd_buffer, viewports, scissors);
-        self.device.cmd_bind_pipeline(cmd_buffer, self.pipeline.get());
+        self.device.cmd_bind_pipeline(cmd_buffer, self.pipeline.handle);
         self.device.cmd_draw(cmd_buffer, 3, 1, 0, 0);
         self.device.cmd_end_render_pass(cmd_buffer);
 
         self.device.end_command_buffer(cmd_buffer);
 
-        self.device.queue_submit(cmd_buffer, self.fences.get()[frame]);
+        self.device.queue_submit(cmd_buffer, self.fences.handle[frame]);
 
-        self.device.wait_for_fences(&[self.fences.get()[frame]].to_vec(), u64::MAX);
-        self.device.reset_fences(self.fences.get()[frame]);
+        self.device.wait_for_fences(&[self.fences.handle[frame]].to_vec(), u64::MAX);
+        self.device.reset_fences(self.fences.handle[frame]);
     }
 
     pub fn destroy(&self) {
-        self.device.wait_for_fences(self.fences.get(), !0);
+        self.device.wait_for_fences(&self.fences.handle, !0);
 
-        self.device.destroy_fences(self.fences.get());
-        self.device.destroy_pipeline(self.pipeline.get());
-        self.device.destroy_pipeline_layout(self.pipeline.pipeline_layout());
-        self.device.destroy_command_pool(self.command_pool.get());
-        self.device.destroy_render_pass(self.render_pass.get());
+        self.device.destroy_fences(&self.fences.handle);
+        self.device.destroy_pipeline(self.pipeline.handle);
+        self.device.destroy_pipeline_layout(self.pipeline.pipeline_layout);
+        self.device.destroy_command_pool(self.command_pool.handle);
+        self.device.destroy_render_pass(self.render_pass.handle);
         self.device.destroy_device();
         self.vk_instance.destroy_instance();
     }
