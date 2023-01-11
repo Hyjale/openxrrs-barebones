@@ -25,6 +25,7 @@ pub struct App {
     xr_instance: Arc<XRInstance>,
     renderer: Renderer,
     swapchain: Option<Swapchain>,
+    event_storage: xr::EventDataBuffer,
     frame: usize,
 }
 
@@ -37,11 +38,12 @@ impl App {
             xr_instance: xr_instance,
             renderer: renderer,
             swapchain: None,
+            event_storage: xr::EventDataBuffer::new(),
             frame: 0
         }
     }
 
-    pub fn run(&mut self) -> Result<bool, bool> {
+    pub fn run(&mut self) {
         let running = Arc::new(AtomicBool::new(true));
         let r = running.clone();
         ctrlc::set_handler(move || {
@@ -61,28 +63,48 @@ impl App {
                     },
                 )
                 .unwrap();
-
             let actions = Action::new(&self.xr_instance.xr_instance, &session);
             let spaces = Space::new(&session);
 
             'main: loop {
                 if !running.load(Ordering::Relaxed) {
-                    println!("OpenXR request exit");
                     match session.request_exit() {
-                        Ok(()) => {println!("Requesting exit");}
+                        Ok(()) => {}
                         Err(xr::sys::Result::ERROR_SESSION_NOT_RUNNING) => break 'main,
                         Err(e) => panic!("{}", e),
                     }
                 }
 
-                if !self.update_frame(&session,
-                                      &spaces,
-                                      &actions,
-                                      &mut frame_wait,
-                                      &mut frame_stream)?
-                {
-                    break 'main;
+                while let Some(event) = &self.xr_instance.xr_instance.poll_event(&mut self.event_storage).unwrap() {
+                    use xr::Event::*;
+                    match event {
+                        SessionStateChanged(e) => {
+                            println!("OpenXR session state chnage: {:?}", e.state());
+                            match e.state() {
+                                xr::SessionState::READY => {
+                                    session.begin(VIEW_TYPE).unwrap();
+                                }
+                                xr::SessionState::STOPPING => {
+                                    session.end().unwrap();
+                                }
+                                xr::SessionState::EXITING | xr::SessionState::LOSS_PENDING => {
+                                    break 'main;
+                                }
+                                _ => {}
+                            }
+                        }
+                        InstanceLossPending(_) => {
+                            break 'main;
+                        }
+                        _ => {}
+                    }
                 }
+
+                self.update_frame(&session,
+                                  &spaces,
+                                  &actions,
+                                  &mut frame_wait,
+                                  &mut frame_stream);
             }
 
             drop((
@@ -111,11 +133,7 @@ impl App {
                     actions: &Action,
                     frame_wait: &mut openxr::FrameWaiter,
                     frame_stream: &mut openxr::FrameStream<xr::Vulkan>
-    ) -> Result<bool, bool> {
-        if !self.handle_session_events(&session)? {
-            return Err(false)
-        }
-
+    ) {
         let xr_frame_state = frame_wait.wait().unwrap();
         frame_stream.begin().unwrap();
 
@@ -128,7 +146,7 @@ impl App {
                 )
                 .unwrap();
 
-            return Ok(true);
+            return;
         }
 
         let swapchain = self.swapchain.get_or_insert_with(|| {
@@ -192,40 +210,5 @@ impl App {
             .unwrap();
 
         self.frame = (self.frame + 1) % PIPELINE_DEPTH as usize;
-
-        Ok(true)
-    }
-
-    fn handle_session_events(&self, session: &openxr::Session<xr::Vulkan>) -> Result<bool, bool> {
-        let mut buffer = xr::EventDataBuffer::new();
-        while let Some(event) = self.xr_instance.xr_instance.poll_event(&mut buffer).unwrap() {
-            use xr::Event::*;
-
-            match event {
-                SessionStateChanged(e) => {
-                    match e.state() {
-                        xr::SessionState::READY => {
-                            session.begin(VIEW_TYPE).unwrap();
-                            return Ok(true);
-                        }
-                        xr::SessionState::STOPPING => {
-                            session.end().unwrap();
-                        }
-                        xr::SessionState::EXITING | xr::SessionState::LOSS_PENDING => {
-                            return Err(false);
-                        }
-                        _ => println!(
-                            "OpenXR session state change: {:?}", e.state()
-                        ),
-                    }
-                }
-                InstanceLossPending(_) => {
-                    return Err(false);
-                }
-                _ => {},
-            }
-        }
-
-        Ok(true)
     }
 }
