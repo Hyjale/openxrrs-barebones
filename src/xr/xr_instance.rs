@@ -2,7 +2,7 @@ use openxr as xr;
 use std::sync::{Arc};
 
 pub struct XRInstance {
-    pub xr_instance: openxr::Instance,
+    pub handle: openxr::Instance,
     pub system_id: openxr::SystemId,
     pub environment_blend_mode: openxr::EnvironmentBlendMode,
 }
@@ -30,7 +30,7 @@ impl XRInstance {
             extensions.khr_android_create_instance = true;
         }
 
-        let xr_instance = entry
+        let handle = entry
             .create_instance(
                 &xr::ApplicationInfo {
                     application_name: "demo",
@@ -43,17 +43,17 @@ impl XRInstance {
             )
             .unwrap();
 
-        let system_id = xr_instance
+        let system_id = handle
             .system(xr::FormFactor::HEAD_MOUNTED_DISPLAY)
             .unwrap();
 
-        let environment_blend_mode = xr_instance
+        let environment_blend_mode = handle
             .enumerate_environment_blend_modes(system_id, VIEW_TYPE)
             .unwrap()[0];
 
         let vk_version = xr::Version::new(1, 1, 0);
 
-        let graphics_requirements = xr_instance
+        let graphics_requirements = handle
             .graphics_requirements::<xr::Vulkan>(system_id)
             .unwrap();
 
@@ -70,7 +70,7 @@ impl XRInstance {
         }
 
         Arc::new(XRInstance {
-            xr_instance: xr_instance,
+            handle: handle,
             system_id: system_id,
             environment_blend_mode: environment_blend_mode
         })

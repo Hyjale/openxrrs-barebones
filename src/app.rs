@@ -30,7 +30,7 @@ pub struct App {
 impl App {
     pub fn new() -> Self {
         let xr_instance = XRInstance::new();
-        let renderer = Renderer::new(&xr_instance.xr_instance, xr_instance.system_id);
+        let renderer = Renderer::new(&xr_instance.handle, xr_instance.system_id);
 
         App {
             xr_instance: xr_instance,
@@ -50,7 +50,7 @@ impl App {
         let mut swapchain = None;
 
         unsafe {
-            let (session, mut frame_wait, mut frame_stream) = self.xr_instance.xr_instance
+            let (session, mut frame_wait, mut frame_stream) = self.xr_instance.handle
                 .create_session::<xr::Vulkan>(
                     self.xr_instance.system_id,
                     &xr::vulkan::SessionCreateInfo {
@@ -62,7 +62,7 @@ impl App {
                     },
                 )
                 .unwrap();
-            let actions = Action::new(&self.xr_instance.xr_instance, &session);
+            let actions = Action::new(&self.xr_instance.handle, &session);
             let spaces = Space::new(&session);
 
             'main: loop {
@@ -74,7 +74,7 @@ impl App {
                     }
                 }
 
-                while let Some(event) = &self.xr_instance.xr_instance.poll_event(&mut self.event_storage).unwrap() {
+                while let Some(event) = &self.xr_instance.handle.poll_event(&mut self.event_storage).unwrap() {
                     use xr::Event::*;
                     match event {
                         SessionStateChanged(e) => {
@@ -152,7 +152,7 @@ impl App {
         }
 
         let swapchain = swapchain.get_or_insert_with(|| {
-            Swapchain::new(&self.xr_instance.xr_instance,
+            Swapchain::new(&self.xr_instance.handle,
                             &self.renderer.device.handle,
                             &session,
                             self.xr_instance.system_id,
