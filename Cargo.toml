@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 ash = "0.37"
+ctrlc = "3.1.5"
 openxr = { git = "https://github.com/Ralith/openxrs", features = ["loaded"]}
 
 [target.'cfg(target_os = "android")'.dependencies]

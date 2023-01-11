@@ -1,6 +1,12 @@
 use ash::{vk::Handle};
 use openxr as xr;
-use std::{sync::Arc};
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    }
+};
+
 
 use crate::{
     graphics::{renderer::Renderer},
@@ -35,7 +41,13 @@ impl App {
         }
     }
 
-    pub fn run(&mut self) -> Result<bool, bool>{
+    pub fn run(&mut self) -> Result<bool, bool> {
+        let running = Arc::new(AtomicBool::new(true));
+        let r = running.clone();
+        ctrlc::set_handler(move || {
+            r.store(false, Ordering::Relaxed);
+        }).expect("Error setting Ctrl-C handler");
+
         unsafe {
             let (session, mut frame_wait, mut frame_stream) = self.xr_instance.xr_instance
                 .create_session::<xr::Vulkan>(
@@ -54,7 +66,21 @@ impl App {
             let spaces = Space::new(&session);
 
             'main: loop {
-                if !self.update_frame(&session, &spaces, &actions, &mut frame_wait, &mut frame_stream)? {
+                if !running.load(Ordering::Relaxed) {
+                    println!("OpenXR request exit");
+                    match session.request_exit() {
+                        Ok(()) => {println!("Requesting exit");}
+                        Err(xr::sys::Result::ERROR_SESSION_NOT_RUNNING) => break 'main,
+                        Err(e) => panic!("{}", e),
+                    }
+                }
+
+                if !self.update_frame(&session,
+                                      &spaces,
+                                      &actions,
+                                      &mut frame_wait,
+                                      &mut frame_stream)?
+                {
                     break 'main;
                 }
             }
