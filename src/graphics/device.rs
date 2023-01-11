@@ -190,6 +190,10 @@ impl Device {
         }
     }
 
+    pub fn device_wait_idle(&self) {
+        unsafe { self.handle.device_wait_idle().unwrap(); }
+    }
+
     pub fn destroy_fences(&self, fences: &Vec<ash::vk::Fence>) {
         unsafe {
             for fence in fences {

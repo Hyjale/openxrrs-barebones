@@ -100,8 +100,6 @@ impl Renderer {
     }
 
     pub fn destroy(&self) {
-        self.device.wait_for_fences(&self.fences.handle, !0);
-
         self.device.destroy_fences(&self.fences.handle);
         self.device.destroy_pipeline(self.pipeline.handle);
         self.device.destroy_pipeline_layout(self.pipeline.pipeline_layout);

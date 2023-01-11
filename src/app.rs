@@ -24,7 +24,6 @@ const VIEW_TYPE: xr::ViewConfigurationType = xr::ViewConfigurationType::PRIMARY_
 pub struct App {
     xr_instance: Arc<XRInstance>,
     renderer: Renderer,
-    swapchain: Option<Swapchain>,
     event_storage: xr::EventDataBuffer,
     frame: usize,
 }
@@ -37,7 +36,6 @@ impl App {
         App {
             xr_instance: xr_instance,
             renderer: renderer,
-            swapchain: None,
             event_storage: xr::EventDataBuffer::new(),
             frame: 0
         }
@@ -49,6 +47,8 @@ impl App {
         ctrlc::set_handler(move || {
             r.store(false, Ordering::Relaxed);
         }).expect("Error setting Ctrl-C handler");
+
+        let mut swapchain = None;
 
         unsafe {
             let (session, mut frame_wait, mut frame_stream) = self.xr_instance.xr_instance
@@ -79,7 +79,7 @@ impl App {
                     use xr::Event::*;
                     match event {
                         SessionStateChanged(e) => {
-                            println!("OpenXR session state chnage: {:?}", e.state());
+                            println!("OpenXR session state change: {:?}", e.state());
                             match e.state() {
                                 xr::SessionState::READY => {
                                     session.begin(VIEW_TYPE).unwrap();
@@ -104,7 +104,8 @@ impl App {
                                   &spaces,
                                   &actions,
                                   &mut frame_wait,
-                                  &mut frame_stream);
+                                  &mut frame_stream,
+                                  &mut swapchain);
             }
 
             drop((
@@ -115,16 +116,17 @@ impl App {
                 actions
             ));
 
-            if let Some(swapchain) = &self.swapchain {
+            self.renderer.device.device_wait_idle();
+            if let Some(swapchain) = swapchain {
                 for framebuffer in &swapchain.framebuffers {
                     self.renderer.device.destroy_framebuffer(framebuffer.framebuffer);
                     self.renderer.device.destroy_image_view(framebuffer.color);
                 }
             }
-            self.renderer.destroy();
-
-            Ok(true)
+            self.renderer.destroy()
         }
+
+        println!("Clean exit");
     }
 
     fn update_frame(&mut self,
@@ -132,7 +134,8 @@ impl App {
                     spaces: &Space,
                     actions: &Action,
                     frame_wait: &mut openxr::FrameWaiter,
-                    frame_stream: &mut openxr::FrameStream<xr::Vulkan>
+                    frame_stream: &mut openxr::FrameStream<xr::Vulkan>,
+                    swapchain: &mut Option<Swapchain>
     ) {
         let xr_frame_state = frame_wait.wait().unwrap();
         frame_stream.begin().unwrap();
@@ -149,7 +152,7 @@ impl App {
             return;
         }
 
-        let swapchain = self.swapchain.get_or_insert_with(|| {
+        let swapchain = swapchain.get_or_insert_with(|| {
             Swapchain::new(&self.xr_instance.xr_instance,
                             &self.renderer.device.handle,
                             &session,
