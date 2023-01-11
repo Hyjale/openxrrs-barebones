@@ -7,7 +7,6 @@ use std::{
     }
 };
 
-
 use crate::{
     graphics::{renderer::Renderer},
     xr::{
@@ -115,16 +114,16 @@ impl App {
                 spaces,
                 actions
             ));
-
-            self.renderer.device.device_wait_idle();
-            if let Some(swapchain) = swapchain {
-                for framebuffer in &swapchain.framebuffers {
-                    self.renderer.device.destroy_framebuffer(framebuffer.framebuffer);
-                    self.renderer.device.destroy_image_view(framebuffer.color);
-                }
-            }
-            self.renderer.destroy()
         }
+
+        self.renderer.device.device_wait_idle();
+        if let Some(swapchain) = swapchain {
+            for framebuffer in &swapchain.framebuffers {
+                self.renderer.device.destroy_framebuffer(framebuffer.framebuffer);
+                self.renderer.device.destroy_image_view(framebuffer.color);
+            }
+        }
+        self.renderer.destroy();
 
         println!("Clean exit");
     }

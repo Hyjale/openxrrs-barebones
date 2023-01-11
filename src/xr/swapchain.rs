@@ -22,36 +22,37 @@ impl Swapchain {
                system: openxr::SystemId,
                render_pass: ash::vk::RenderPass
     ) -> Swapchain {
-        unsafe {
-            let views = instance
-                .enumerate_view_configuration_views(system, VIEW_TYPE)
-                .unwrap();
+        let views = instance
+            .enumerate_view_configuration_views(system, VIEW_TYPE)
+            .unwrap();
 
-            let resolution = vk::Extent2D {
-                width: views[0].recommended_image_rect_width,
-                height: views[0].recommended_image_rect_height,
-            };
+        let resolution = vk::Extent2D {
+            width: views[0].recommended_image_rect_width,
+            height: views[0].recommended_image_rect_height,
+        };
 
-            let handle = session
-                .create_swapchain(&xr::SwapchainCreateInfo {
-                    create_flags: xr::SwapchainCreateFlags::EMPTY,
-                    usage_flags: xr::SwapchainUsageFlags::COLOR_ATTACHMENT
-                        | xr::SwapchainUsageFlags::SAMPLED,
-                    format: COLOR_FORMAT.as_raw() as _,
-                    sample_count: 1,
-                    width: resolution.width,
-                    height: resolution.height,
-                    face_count: 1,
-                    array_size: VIEW_COUNT,
-                    mip_count: 1,
-                })
-                .unwrap();
+        let handle = session
+            .create_swapchain(&xr::SwapchainCreateInfo {
+                create_flags: xr::SwapchainCreateFlags::EMPTY,
+                usage_flags: xr::SwapchainUsageFlags::COLOR_ATTACHMENT
+                    | xr::SwapchainUsageFlags::SAMPLED,
+                format: COLOR_FORMAT.as_raw() as _,
+                sample_count: 1,
+                width: resolution.width,
+                height: resolution.height,
+                face_count: 1,
+                array_size: VIEW_COUNT,
+                mip_count: 1,
+            })
+            .unwrap();
 
-            let images = handle.enumerate_images().unwrap();
-            let framebuffers = images
-                .into_iter()
-                .map(|color_image| {
-                    let color_image = vk::Image::from_raw(color_image);
+        let images = handle.enumerate_images().unwrap();
+
+        let framebuffers = images
+            .into_iter()
+            .map(|color_image| {
+                let color_image = vk::Image::from_raw(color_image);
+                unsafe {
                     let color = device
                         .create_image_view(
                             &vk::ImageViewCreateInfo::builder()
@@ -81,15 +82,14 @@ impl Swapchain {
                         )
                         .unwrap();
                     Framebuffer { framebuffer, color }
+                }
+            })
+            .collect();
 
-                })
-                .collect();
-
-            Swapchain {
-                resolution,
-                handle,
-                framebuffers
-            }
+        Swapchain {
+            resolution,
+            handle,
+            framebuffers
         }
     }
 }
