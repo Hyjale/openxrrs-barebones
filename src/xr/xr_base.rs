@@ -1,16 +1,13 @@
 use openxr as xr;
 use std::sync::{Arc};
 
-pub struct XRInstance {
-    pub handle: openxr::Instance,
+pub struct XRBase {
+    pub xr_instance: openxr::Instance,
     pub system_id: openxr::SystemId,
-    pub environment_blend_mode: openxr::EnvironmentBlendMode,
 }
 
-const VIEW_TYPE: xr::ViewConfigurationType = xr::ViewConfigurationType::PRIMARY_STEREO;
-
-impl XRInstance {
-    pub fn new() -> Arc<XRInstance> {
+impl XRBase {
+    pub fn new() -> Arc<XRBase> {
         #[cfg(feature = "static")]
         let entry = xr::Entry::linked();
         #[cfg(not(feature = "static"))]
@@ -30,7 +27,7 @@ impl XRInstance {
             extensions.khr_android_create_instance = true;
         }
 
-        let handle = entry
+        let xr_instance = entry
             .create_instance(
                 &xr::ApplicationInfo {
                     application_name: "demo",
@@ -43,17 +40,13 @@ impl XRInstance {
             )
             .unwrap();
 
-        let system_id = handle
+        let system_id = xr_instance
             .system(xr::FormFactor::HEAD_MOUNTED_DISPLAY)
             .unwrap();
 
-        let environment_blend_mode = handle
-            .enumerate_environment_blend_modes(system_id, VIEW_TYPE)
-            .unwrap()[0];
-
         let vk_version = xr::Version::new(1, 1, 0);
 
-        let graphics_requirements = handle
+        let graphics_requirements = xr_instance
             .graphics_requirements::<xr::Vulkan>(system_id)
             .unwrap();
 
@@ -69,10 +62,15 @@ impl XRInstance {
             );
         }
 
-        Arc::new(XRInstance {
-            handle: handle,
-            system_id: system_id,
-            environment_blend_mode: environment_blend_mode
+        Arc::new(XRBase {
+            xr_instance: xr_instance,
+            system_id: system_id
         })
+    }
+}
+
+impl Drop for XRBase {
+    fn drop(&mut self) {
+        println!("Dropping XRBase");
     }
 }
