@@ -9,6 +9,7 @@ use crate::{
         render_pass::RenderPass,
         vk_base::VkBase
     },
+    Renderer,
     xr::{swapchain::Swapchain}
 };
 
@@ -19,8 +20,8 @@ pub struct VkRenderer {
     pub vk_base: Arc<VkBase>,
 }
 
-impl VkRenderer {
-    pub fn new(vk_base: Arc<VkBase>, swapchain: &Swapchain) -> Self {
+impl Renderer for VkRenderer {
+    fn new(vk_base: Arc<VkBase>, swapchain: &Swapchain) -> Self {
         let render_pass = RenderPass::new(&vk_base.device);
 
         let pipeline = Pipeline::new(&vk_base.device, &render_pass);
@@ -35,7 +36,7 @@ impl VkRenderer {
         }
     }
 
-    pub fn draw(&self,
+    fn draw(&self,
                 frame: usize,
                 swapchain: &mut Swapchain
     ) {

@@ -10,6 +10,7 @@ use crate::{
         xr_base::XRBase,
         swapchain::Swapchain
     },
+    Renderer,
     graphics::{
         vk_base::VkBase,
         vk_renderer::VkRenderer

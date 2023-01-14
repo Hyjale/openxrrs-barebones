@@ -11,6 +11,7 @@ use crate::{
         vk_base::VkBase,
         vk_renderer::VkRenderer
     },
+    Renderer,
     xr::{
         xr_base::XRBase,
         xr_renderer::XRRenderer,
