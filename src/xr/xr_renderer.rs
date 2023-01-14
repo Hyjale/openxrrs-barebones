@@ -17,7 +17,6 @@ use crate::{
     }
 };
 
-const PIPELINE_DEPTH: u32 = 2;
 const VIEW_TYPE: xr::ViewConfigurationType = xr::ViewConfigurationType::PRIMARY_STEREO;
 
 pub struct XRRenderer {
@@ -30,7 +29,6 @@ pub struct XRRenderer {
     pub swapchain: Swapchain,
     pub actions: Action,
     pub spaces: Space,
-    pub frame: usize,
 }
 
 impl XRRenderer {
@@ -64,8 +62,6 @@ impl XRRenderer {
                 .enumerate_environment_blend_modes(xr_base.system_id, VIEW_TYPE)
                 .unwrap()[0];
 
-            let frame = 0;
-
             XRRenderer {
                 xr_base,
                 session,
@@ -76,12 +72,11 @@ impl XRRenderer {
                 swapchain,
                 actions,
                 spaces,
-                frame
             }
         }
     }
 
-    pub fn update_frame(&mut self, vk_renderer: &VkRenderer) {
+    pub fn update_frame(&mut self, vk_renderer: &mut VkRenderer) {
         let xr_frame_state = self.frame_wait.wait().unwrap();
         self.frame_stream.begin().unwrap();
 
@@ -97,7 +92,7 @@ impl XRRenderer {
             return;
         }
 
-        vk_renderer.draw(self.frame, &mut self.swapchain);
+        vk_renderer.draw(&mut self.swapchain);
 
         self.swapchain.handle.wait_image(xr::Duration::INFINITE).unwrap();
         self.swapchain.handle.release_image().unwrap();
@@ -142,8 +137,6 @@ impl XRRenderer {
                 &[&projection],
             )
             .unwrap();
-
-        self.frame = (self.frame + 1) % PIPELINE_DEPTH as usize;
     }
 }
 

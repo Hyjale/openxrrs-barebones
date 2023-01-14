@@ -10,5 +10,5 @@ pub mod xr;
 pub trait Renderer {
     fn new(vk_base: Arc<VkBase>, swapchain: &Swapchain) -> Self;
 
-    fn draw(&self, frame: usize, swapchain: &mut Swapchain);
+    fn draw(&mut self, swapchain: &mut Swapchain);
 }

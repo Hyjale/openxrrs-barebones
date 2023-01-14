@@ -18,7 +18,10 @@ pub struct VkRenderer {
     pub render_pass: Arc<RenderPass>,
     pub framebuffers: Arc<Framebuffers>,
     pub vk_base: Arc<VkBase>,
+    pub frame: usize
 }
+
+const PIPELINE_DEPTH: u32 = 2;
 
 impl Renderer for VkRenderer {
     fn new(vk_base: Arc<VkBase>, swapchain: &Swapchain) -> Self {
@@ -28,19 +31,19 @@ impl Renderer for VkRenderer {
 
         let framebuffers = Framebuffers::new(&swapchain, &vk_base.device, &render_pass);
 
+        let frame = 0;
+
         VkRenderer {
             pipeline,
             render_pass,
             framebuffers,
             vk_base,
+            frame
         }
     }
 
-    fn draw(&self,
-                frame: usize,
-                swapchain: &mut Swapchain
-    ) {
-        let cmd_buffer = self.vk_base.command_buffers.handle[frame];
+    fn draw(&mut self, swapchain: &mut Swapchain) {
+        let cmd_buffer = self.vk_base.command_buffers.handle[self.frame];
         self.vk_base.device.begin_command_buffer(cmd_buffer);
 
         let image_index = swapchain.handle.acquire_image().unwrap();
@@ -69,10 +72,12 @@ impl Renderer for VkRenderer {
 
         self.vk_base.device.end_command_buffer(cmd_buffer);
 
-        self.vk_base.device.queue_submit(cmd_buffer, self.vk_base.fences.handle[frame]);
+        self.vk_base.device.queue_submit(cmd_buffer, self.vk_base.fences.handle[self.frame]);
 
-        self.vk_base.device.wait_for_fences(&[self.vk_base.fences.handle[frame]].to_vec(), u64::MAX);
-        self.vk_base.device.reset_fences(self.vk_base.fences.handle[frame]);
+        self.vk_base.device.wait_for_fences(&[self.vk_base.fences.handle[self.frame]].to_vec(), u64::MAX);
+        self.vk_base.device.reset_fences(self.vk_base.fences.handle[self.frame]);
+
+        self.frame = (self.frame + 1) % PIPELINE_DEPTH as usize;
     }
 }
 

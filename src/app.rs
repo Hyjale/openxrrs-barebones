@@ -86,7 +86,7 @@ impl App {
                 }
             }
 
-            self.xr_renderer.update_frame(&self.vk_renderer);
+            self.xr_renderer.update_frame(&mut self.vk_renderer);
         }
 
         println!("Clean exit");
