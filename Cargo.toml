@@ -21,6 +21,9 @@ name = "demo-android"
 path = "examples/demo.rs"
 crate-type = ["cdylib"]
 
+[[example]]
+name = "triangle"
+
 # Below is metadata used by cargo-apk
 [package.metadata.android]
 runtime_libs = "examples/libs"
