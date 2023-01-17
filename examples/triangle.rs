@@ -1,5 +1,8 @@
-use std::mem::align_of;
-use std::sync::{Arc};
+use std::{
+    io::Cursor,
+    mem::align_of,
+    sync::{Arc},
+};
 
 use ash::{vk::{self, Handle}};
 use ash::util::*;
@@ -52,7 +55,9 @@ pub struct TriangleRenderer {
     index_buffer: vk::Buffer,
     index_buffer_memory: vk::DeviceMemory,
     vertex_input_buffer: vk::Buffer,
-    vertex_input_buffer_memory: vk::DeviceMemory
+    vertex_input_buffer_memory: vk::DeviceMemory,
+    vertex_shader_module: vk::ShaderModule,
+    fragment_shader_module: vk::ShaderModule,
 }
 
 impl Renderer for TriangleRenderer {
@@ -333,6 +338,24 @@ impl Renderer for TriangleRenderer {
                 .bind_buffer_memory(vertex_input_buffer, vertex_input_buffer_memory, 0)
                 .unwrap();
 
+            let mut vertex_file = Cursor::new(&include_bytes!("../assets/shaders/triangle_vert.spv")[..]);
+            let mut frag_file = Cursor::new(&include_bytes!("../assets/shaders/triangle_frag.spv")[..]);
+            let vertex_code = read_spv(&mut vertex_file).expect("Error reading vertex shader file");
+            let vertex_shader_info = vk::ShaderModuleCreateInfo::builder().code(&vertex_code);
+            let frag_code = read_spv(&mut frag_file).expect("Error reading fragment shader file");
+            let frag_shader_info = vk::ShaderModuleCreateInfo::builder().code(&frag_code);
+
+            let vertex_shader_module = vk_base
+                .device
+                .handle
+                .create_shader_module(&vertex_shader_info, None)
+                .expect("Error creating vertex shader module");
+
+            let fragment_shader_module = vk_base
+                .device
+                .handle
+                .create_shader_module(&frag_shader_info, None)
+                .expect("Error creating fragment shader module");
 
             TriangleRenderer {
                 renderpass,
@@ -340,7 +363,9 @@ impl Renderer for TriangleRenderer {
                 index_buffer,
                 index_buffer_memory,
                 vertex_input_buffer,
-                vertex_input_buffer_memory
+                vertex_input_buffer_memory,
+                vertex_shader_module,
+                fragment_shader_module,
             }
         }
     }
