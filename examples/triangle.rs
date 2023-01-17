@@ -1,6 +1,8 @@
+use std::mem::align_of;
 use std::sync::{Arc};
 
 use ash::{vk::{self, Handle}};
+use ash::util::*;
 
 use xrrs::{
     graphics::{
@@ -46,7 +48,11 @@ struct Framebuffer {
 
 pub struct TriangleRenderer {
     renderpass: vk::RenderPass,
-    framebuffers: Vec<Framebuffer>
+    framebuffers: Vec<Framebuffer>,
+    index_buffer: vk::Buffer,
+    index_buffer_memory: vk::DeviceMemory,
+    vertex_input_buffer: vk::Buffer,
+    vertex_input_buffer_memory: vk::DeviceMemory
 }
 
 impl Renderer for TriangleRenderer {
@@ -205,9 +211,136 @@ impl Renderer for TriangleRenderer {
                 })
                 .collect();
 
+            let index_buffer_data = [0u32, 1, 2];
+            let index_buffer_info = vk::BufferCreateInfo::builder()
+                .size(std::mem::size_of_val(&index_buffer_data) as u64)
+                .usage(vk::BufferUsageFlags::INDEX_BUFFER)
+                .sharing_mode(vk::SharingMode::EXCLUSIVE);
+            let index_buffer = vk_base.device
+                .handle
+                .create_buffer(&index_buffer_info, None)
+                .unwrap();
+            let index_buffer_memory_requirements = vk_base.device
+                .handle
+                .get_buffer_memory_requirements(index_buffer);
+            let index_buffer_memory_index = find_memorytype_index(
+                &index_buffer_memory_requirements,
+                &device_memory_properties,
+                vk::MemoryPropertyFlags::HOST_VISIBLE | vk::MemoryPropertyFlags::HOST_COHERENT
+            ).expect("Error finding memory type for index buffer");
+            let index_allocate_info = vk::MemoryAllocateInfo {
+                allocation_size: index_buffer_memory_requirements.size,
+                memory_type_index: index_buffer_memory_index,
+                ..Default::default()
+            };
+            let index_buffer_memory = vk_base.device
+                .handle
+                .allocate_memory(&index_allocate_info, None)
+                .unwrap();
+            let index_ptr = vk_base.device
+                .handle
+                .map_memory(
+                    index_buffer_memory,
+                    0,
+                    index_buffer_memory_requirements.size,
+                    vk::MemoryMapFlags::empty()
+                )
+                .unwrap();
+            let mut index_slice = Align::new(
+                index_ptr,
+                align_of::<u32> as u64,
+                index_buffer_memory_requirements.size
+            );
+            index_slice.copy_from_slice(&index_buffer_data);
+            vk_base.device.handle.unmap_memory(index_buffer_memory);
+            vk_base.device
+                .handle
+                .bind_buffer_memory(index_buffer, index_buffer_memory, 0)
+                .unwrap();
+
+            let vertex_input_buffer_info = vk::BufferCreateInfo {
+                size: 3 * std::mem::size_of::<Vertex>() as u64,
+                usage: vk::BufferUsageFlags::VERTEX_BUFFER,
+                sharing_mode: vk::SharingMode::EXCLUSIVE,
+                ..Default::default()
+            };
+
+            let vertex_input_buffer = vk_base
+                .device
+                .handle
+                .create_buffer(&vertex_input_buffer_info, None)
+                .unwrap();
+
+            let vertex_input_buffer_memory_requirements = vk_base
+                .device
+                .handle
+                .get_buffer_memory_requirements(vertex_input_buffer);
+
+            let vertex_input_buffer_memory_index = find_memorytype_index(
+                &vertex_input_buffer_memory_requirements,
+                &device_memory_properties,
+                vk::MemoryPropertyFlags::HOST_VISIBLE | vk::MemoryPropertyFlags::HOST_COHERENT,
+            )
+            .expect("Error finding memory type for vertex buffer.");
+
+            let vertex_buffer_allocate_info = vk::MemoryAllocateInfo {
+                allocation_size: vertex_input_buffer_memory_requirements.size,
+                memory_type_index: vertex_input_buffer_memory_index,
+                ..Default::default()
+            };
+
+            let vertex_input_buffer_memory = vk_base
+                .device
+                .handle
+                .allocate_memory(&vertex_buffer_allocate_info, None)
+                .unwrap();
+
+            let vertices = [
+                Vertex {
+                    pos: [-1.0, 1.0, 0.0, 1.0],
+                    color: [0.0, 1.0, 0.0, 1.0],
+                },
+                Vertex {
+                    pos: [1.0, 1.0, 0.0, 1.0],
+                    color: [0.0, 0.0, 1.0, 1.0],
+                },
+                Vertex {
+                    pos: [0.0, -1.0, 0.0, 1.0],
+                    color: [1.0, 0.0, 0.0, 1.0],
+                },
+            ];
+
+            let vert_ptr = vk_base
+                .device
+                .handle
+                .map_memory(
+                    vertex_input_buffer_memory,
+                    0,
+                    vertex_input_buffer_memory_requirements.size,
+                    vk::MemoryMapFlags::empty(),
+                )
+                .unwrap();
+
+            let mut vert_align = Align::new(
+                vert_ptr,
+                align_of::<Vertex>() as u64,
+                vertex_input_buffer_memory_requirements.size,
+            );
+            vert_align.copy_from_slice(&vertices);
+            vk_base.device.handle.unmap_memory(vertex_input_buffer_memory);
+            vk_base.device
+                .handle
+                .bind_buffer_memory(vertex_input_buffer, vertex_input_buffer_memory, 0)
+                .unwrap();
+
+
             TriangleRenderer {
                 renderpass,
-                framebuffers
+                framebuffers,
+                index_buffer,
+                index_buffer_memory,
+                vertex_input_buffer,
+                vertex_input_buffer_memory
             }
         }
     }
