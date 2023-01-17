@@ -19,6 +19,9 @@ use xrrs::{
     xr::{swapchain::Swapchain}
 };
 
+const COLOR_FORMAT: vk::Format = vk::Format::R8G8B8A8_SRGB;
+const DEPTH_FORMAT: vk::Format = vk::Format::D16_UNORM;
+const VIEW_COUNT: u32 = 2;
 pub struct TriangleRenderer {
     renderpass: vk::RenderPass
 }
@@ -69,10 +72,17 @@ impl Renderer for TriangleRenderer {
                 ..Default::default()
             }];
 
+            let view_mask = !(!0 << VIEW_COUNT);
             let renderpass_create_info = vk::RenderPassCreateInfo::builder()
                 .attachments(&renderpass_attachments)
                 .subpasses(&subpass)
-                .dependencies(&subpass_dependencies);
+                .dependencies(&subpass_dependencies)
+                .push_next(
+                    &mut vk::RenderPassMultiviewCreateInfo::builder()
+                        .view_masks(&[view_mask])
+                        .correlation_masks(&[view_mask]),
+                )
+                .build();
 
             let renderpass = vk_base
                 .device
