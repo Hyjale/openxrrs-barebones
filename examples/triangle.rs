@@ -45,7 +45,8 @@ struct Framebuffer {
 }
 
 pub struct TriangleRenderer {
-    renderpass: vk::RenderPass
+    renderpass: vk::RenderPass,
+    framebuffers: Vec<Framebuffer>
 }
 
 impl Renderer for TriangleRenderer {
@@ -205,7 +206,8 @@ impl Renderer for TriangleRenderer {
                 .collect();
 
             TriangleRenderer {
-                renderpass
+                renderpass,
+                framebuffers
             }
         }
     }
