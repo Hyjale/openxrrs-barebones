@@ -1,6 +1,6 @@
 use std::{
     io::Cursor,
-    mem::align_of,
+    mem::{self, align_of},
     sync::{Arc},
 };
 
@@ -37,6 +37,16 @@ pub fn find_memorytype_index(
         .map(|(index, _memory_type)| index as _)
 }
 
+macro_rules! offset_of {
+    ($base:path, $field:ident) => {{
+        #[allow(unused_unsafe)]
+        unsafe {
+            let b: $base = mem::zeroed();
+            std::ptr::addr_of!(b.$field) as isize - std::ptr::addr_of!(b) as isize
+        }
+    }};
+}
+
 #[derive(Clone, Debug, Copy)]
 struct Vertex {
     pos: [f32; 4],
@@ -58,6 +68,7 @@ pub struct TriangleRenderer {
     vertex_input_buffer_memory: vk::DeviceMemory,
     vertex_shader_module: vk::ShaderModule,
     fragment_shader_module: vk::ShaderModule,
+    graphics_pipeline: vk::Pipeline
 }
 
 impl Renderer for TriangleRenderer {
@@ -357,6 +368,132 @@ impl Renderer for TriangleRenderer {
                 .create_shader_module(&frag_shader_info, None)
                 .expect("Error creating fragment shader module");
 
+
+            let pipeline_layout = vk_base
+                .device
+                .handle
+                .create_pipeline_layout(
+                    &vk::PipelineLayoutCreateInfo::builder().set_layouts(&[]),
+                    None,
+                )
+                .unwrap();
+
+            let noop_stencil_state = vk::StencilOpState {
+                fail_op: vk::StencilOp::KEEP,
+                pass_op: vk::StencilOp::KEEP,
+                depth_fail_op: vk::StencilOp::KEEP,
+                compare_op: vk::CompareOp::ALWAYS,
+                ..Default::default()
+            };
+
+            let graphics_pipeline = vk_base
+                .device
+                .handle
+                .create_graphics_pipelines(
+                    vk::PipelineCache::null(),
+                    &[vk::GraphicsPipelineCreateInfo::builder()
+                        .stages(&[
+                            vk::PipelineShaderStageCreateInfo {
+                                stage: vk::ShaderStageFlags::VERTEX,
+                                module: vertex_shader_module,
+                                p_name: b"main\0".as_ptr() as _,
+                                ..Default::default()
+                            },
+                            vk::PipelineShaderStageCreateInfo {
+                                stage: vk::ShaderStageFlags::FRAGMENT,
+                                module: fragment_shader_module,
+                                p_name: b"main\0".as_ptr() as _,
+                                ..Default::default()
+                            },
+                        ])
+                        .vertex_input_state(
+                            &vk::PipelineVertexInputStateCreateInfo::builder()
+                                .vertex_binding_descriptions(&[vk::VertexInputBindingDescription {
+                                    binding: 0,
+                                    stride: mem::size_of::<Vertex>() as u32,
+                                    input_rate: vk::VertexInputRate::VERTEX
+                                }])
+                                .vertex_attribute_descriptions(&[
+                                    vk::VertexInputAttributeDescription {
+                                        location: 0,
+                                        binding: 0,
+                                        format: vk::Format::R32G32B32A32_SFLOAT,
+                                        offset: offset_of!(Vertex, pos) as u32,
+                                    },
+                                    vk::VertexInputAttributeDescription {
+                                        location: 1,
+                                        binding: 0,
+                                        format: vk::Format::R32G32B32A32_SFLOAT,
+                                        offset: offset_of!(Vertex, color) as u32,
+                                    },
+                                ])
+                        )
+                        .input_assembly_state(
+                            &vk::PipelineInputAssemblyStateCreateInfo::builder()
+                                .topology(vk::PrimitiveTopology::TRIANGLE_LIST),
+                        )
+                        .viewport_state(
+                            &vk::PipelineViewportStateCreateInfo::builder()
+                                .scissors(&[swapchain.resolution.into()])
+                                .viewports(&[vk::Viewport {
+                                    x: 0.0,
+                                    y: 0.0,
+                                    width: swapchain.resolution.width as f32,
+                                    height: swapchain.resolution.height as f32,
+                                    min_depth: 0.0,
+                                    max_depth: 1.0
+                                }])
+                        )
+                        .rasterization_state(
+                            &vk::PipelineRasterizationStateCreateInfo::builder()
+                                .front_face(vk::FrontFace::COUNTER_CLOCKWISE)
+                                .polygon_mode(vk::PolygonMode::FILL)
+                                .line_width(1.0)
+                        )
+                        .multisample_state(
+                            &vk::PipelineMultisampleStateCreateInfo::builder()
+                                .rasterization_samples(vk::SampleCountFlags::TYPE_1),
+                        )
+                        .depth_stencil_state(
+                            &vk::PipelineDepthStencilStateCreateInfo::builder()
+                                .depth_test_enable(true)
+                                .depth_write_enable(true)
+                                .depth_compare_op(vk::CompareOp::LESS_OR_EQUAL)
+                                .front(noop_stencil_state)
+                                .back(noop_stencil_state)
+                                .max_depth_bounds(1.0)
+                        )
+                        .color_blend_state(
+                            &vk::PipelineColorBlendStateCreateInfo::builder()
+                                .logic_op(vk::LogicOp::CLEAR)
+                                .attachments(&[
+                                    vk::PipelineColorBlendAttachmentState {
+                                        blend_enable: vk::FALSE,
+                                        src_color_blend_factor: vk::BlendFactor::SRC_COLOR,
+                                        dst_color_blend_factor: vk::BlendFactor::ONE_MINUS_DST_COLOR,
+                                        color_blend_op: vk::BlendOp::ADD,
+                                        src_alpha_blend_factor: vk::BlendFactor::ZERO,
+                                        dst_alpha_blend_factor: vk::BlendFactor::ZERO,
+                                        color_write_mask: vk::ColorComponentFlags::RGBA,
+                                        ..Default::default()
+                                    },
+                                ]),
+                        )
+                        .dynamic_state(
+                            &vk::PipelineDynamicStateCreateInfo::builder().dynamic_states(&[
+                                vk::DynamicState::VIEWPORT,
+                                vk::DynamicState::SCISSOR,
+                            ]),
+                        )
+                        .layout(pipeline_layout)
+                        .render_pass(renderpass)
+                        .subpass(0)
+                        .build()],
+                    None,
+                )
+                .unwrap()[0];
+
+
             TriangleRenderer {
                 renderpass,
                 framebuffers,
@@ -366,6 +503,7 @@ impl Renderer for TriangleRenderer {
                 vertex_input_buffer_memory,
                 vertex_shader_module,
                 fragment_shader_module,
+                graphics_pipeline
             }
         }
     }
